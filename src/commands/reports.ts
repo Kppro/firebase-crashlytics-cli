@@ -482,21 +482,40 @@ addCommonOptions(
 
     console.log(c.bold("\n=== Crashlytics Summary ===\n"));
 
-    // ── Total crashes from top issues ───────────────────────────────────
+    // ── Breakdown by type ────────────────────────────────────────────────
 
     const allIssueGroups = issuesReport.groups ?? [];
-    const totalCrashes = allIssueGroups.reduce(
-      (sum, group) => sum + getEventsCount(group),
-      0,
-    );
 
-    const totalUsers = allIssueGroups.reduce(
-      (sum, group) => sum + getUsersCount(group),
-      0,
-    );
+    const byType = { fatal: { events: 0, users: 0 }, nonfatal: { events: 0, users: 0 }, anr: { events: 0, users: 0 } };
+    for (const group of allIssueGroups) {
+      const t = group.issue?.errorType;
+      const bucket = t === "FATAL" ? byType.fatal : t === "NON_FATAL" ? byType.nonfatal : t === "ANR" ? byType.anr : null;
+      if (bucket) {
+        bucket.events += getEventsCount(group);
+        bucket.users += getUsersCount(group);
+      }
+    }
 
-    console.log(`  Total crashes:        ${c.bold(formatNumber(totalCrashes))}`);
-    console.log(`  Total users affected: ${c.bold(formatNumber(totalUsers))}`);
+    const lines: [string, typeof byType.fatal][] = [
+      ["Crashes (fatal)", byType.fatal],
+      ["Errors (non-fatal)", byType.nonfatal],
+      ["ANRs", byType.anr],
+    ];
+
+    for (const [label, data] of lines) {
+      if (data.events > 0) {
+        const usersPart = data.users > 0 ? c.dim(`  (${formatNumber(data.users)} users)`) : "";
+        console.log(`  ${label.padEnd(20)} ${c.bold(formatNumber(data.events).padStart(8))}${usersPart}`);
+      }
+    }
+
+    const totalEvents = byType.fatal.events + byType.nonfatal.events + byType.anr.events;
+    const totalUsers = byType.fatal.users + byType.nonfatal.users + byType.anr.users;
+    if (totalEvents > 0) {
+      const usersPart = totalUsers > 0 ? c.dim(`  (${formatNumber(totalUsers)} users)`) : "";
+      console.log(c.dim("  " + "─".repeat(30)));
+      console.log(`  ${"Total".padEnd(20)} ${c.bold(formatNumber(totalEvents).padStart(8))}${usersPart}`);
+    }
 
     // ── Top 5 Issues ────────────────────────────────────────────────────
 
@@ -507,8 +526,10 @@ addCommonOptions(
     } else {
       const issueRows = topIssues.map((group) => {
         const issue = group.issue;
+        const typeLabel = issue?.errorType === "FATAL" ? "fatal" : issue?.errorType === "NON_FATAL" ? "nonfatal" : issue?.errorType === "ANR" ? "anr" : "";
         return [
           issue?.id ?? "",
+          typeLabel,
           issue?.title ?? "",
           formatNumber(getEventsCount(group)),
           formatNumber(getUsersCount(group)),
@@ -516,7 +537,7 @@ addCommonOptions(
       });
 
       console.log(
-        formatTable(["Issue ID", "Title", "Crashes", "Users"], issueRows),
+        formatTable(["Issue ID", "Type", "Title", "Events", "Users"], issueRows),
       );
     }
 
@@ -530,7 +551,7 @@ addCommonOptions(
       const hasUsers = topVersions.some((g) => getUsersCount(g) > 0);
       const hasSessions = topVersions.some((g) => getSessionsCount(g) > 0);
 
-      const vHeaders = ["Version", "Crashes"];
+      const vHeaders = ["Version", "Events"];
       if (hasUsers) vHeaders.push("Users affected");
       if (hasSessions) vHeaders.push("Sessions");
 
