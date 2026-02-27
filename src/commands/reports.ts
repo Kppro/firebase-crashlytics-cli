@@ -274,22 +274,26 @@ addCommonOptions(
 
     console.log(c.bold("\nTop Versions\n"));
 
+    // Only include columns that have data in at least one group
+    const hasUsers = groups.some((g) => getUsersCount(g) > 0);
+    const hasSessions = groups.some((g) => getSessionsCount(g) > 0);
+
+    const headers = ["Version", "Crashes"];
+    if (hasUsers) headers.push("Users affected");
+    if (hasSessions) headers.push("Sessions");
+
     const tableRows = groups.map((group) => {
       const version = group.version;
-      return [
+      const row = [
         version?.displayName ?? version?.displayVersion ?? "",
         formatNumber(getEventsCount(group)),
-        formatNumber(getUsersCount(group)),
-        formatNumber(getSessionsCount(group)),
       ];
+      if (hasUsers) row.push(formatNumber(getUsersCount(group)));
+      if (hasSessions) row.push(formatNumber(getSessionsCount(group)));
+      return row;
     });
 
-    console.log(
-      formatTable(
-        ["Version", "Crashes", "Users affected", "Sessions"],
-        tableRows,
-      ),
-    );
+    console.log(formatTable(headers, tableRows));
     console.log(c.dim(`\n${groups.length} version${groups.length !== 1 ? "s" : ""} shown.\n`));
   } catch (err: unknown) {
     const error = err as Error;
@@ -523,22 +527,25 @@ addCommonOptions(
     if (topVersions.length === 0) {
       console.log(c.dim("  No version data found."));
     } else {
+      const hasUsers = topVersions.some((g) => getUsersCount(g) > 0);
+      const hasSessions = topVersions.some((g) => getSessionsCount(g) > 0);
+
+      const vHeaders = ["Version", "Crashes"];
+      if (hasUsers) vHeaders.push("Users affected");
+      if (hasSessions) vHeaders.push("Sessions");
+
       const versionRows = topVersions.map((group) => {
         const version = group.version;
-        return [
+        const row = [
           version?.displayName ?? version?.displayVersion ?? "",
           formatNumber(getEventsCount(group)),
-          formatNumber(getUsersCount(group)),
-          formatNumber(getSessionsCount(group)),
         ];
+        if (hasUsers) row.push(formatNumber(getUsersCount(group)));
+        if (hasSessions) row.push(formatNumber(getSessionsCount(group)));
+        return row;
       });
 
-      console.log(
-        formatTable(
-          ["Version", "Crashes", "Users affected", "Sessions"],
-          versionRows,
-        ),
-      );
+      console.log(formatTable(vHeaders, versionRows));
     }
 
     console.log();
