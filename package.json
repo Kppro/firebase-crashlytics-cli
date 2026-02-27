@@ -1,0 +1,33 @@
+{
+  "name": "firebase-crashlytics-cli",
+  "version": "0.1.0",
+  "description": "CLI tool for Firebase Crashlytics",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "fcc": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup",
+    "build:bin": "bun build src/index.ts --compile --outfile fcc",
+    "start": "node dist/index.js",
+    "dev": "tsup --watch"
+  },
+  "keywords": [
+    "firebase",
+    "crashlytics",
+    "cli"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.4.1",
+    "cli-table3": "^0.6.5",
+    "commander": "^13.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "tsup": "^8.4.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.3"
+  }
+}
