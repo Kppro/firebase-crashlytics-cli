@@ -2,7 +2,8 @@ import { readFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-// Firebase CLI public OAuth credentials (from firebase-tools source code)
+// Firebase CLI public OAuth credentials (from firebase-tools source code):
+// https://github.com/firebase/firebase-tools/blob/master/src/api.ts#L10-L18
 const FIREBASE_CLIENT_ID =
   "563584335869-fgrhgmd47bqnekij5i8b5pr03ho849e6.apps.googleusercontent.com";
 const FIREBASE_CLIENT_SECRET = "j9iVZfS8kkCEFUPaAeJV0sAi";
